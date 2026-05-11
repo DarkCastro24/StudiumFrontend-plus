@@ -136,7 +136,7 @@ function StudentProfilePage() {
     return (
         <div className="perfil">
             <div className="cabecera">
-                {userData && (<img className='imagen' src={userData.imagen} alt="Imagen de perfil de Google" />)}
+                {userData && (<img className='imagen' src={userData.imagen} alt="Imagen de perfil de Microsoft" />)}
                 <div className="container-datos">
                     {userData && (
                         <div>

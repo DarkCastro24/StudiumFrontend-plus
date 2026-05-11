@@ -89,6 +89,15 @@ Tecnologías y dependencias documentadas:
 - **jwt-decode**  
   Utilizado para decodificar tokens JWT del lado del cliente y obtener información del usuario autenticado.
 
+- **@azure/msal-browser** y **@azure/msal-react**  
+  Librerías oficiales de Microsoft Authentication Library (MSAL) utilizadas
+  para autenticar usuarios con cuentas Microsoft (Microsoft Entra ID, antes
+  Azure AD). Reemplazaron el inicio de sesión con Google.
+
+- **SweetAlert2**  
+  Utilizado para mostrar de manera consistente los mensajes de éxito, error,
+  advertencia, información y confirmaciones al usuario.
+
 - **React Router**  
   Utilizado para la navegación entre vistas dentro de la aplicación.
 
@@ -150,3 +159,56 @@ Principales rutas de API consumidas por el sistema:
 
 ```bash
 git clone https://github.com/DarkCastro24/StudiumFrontend.git
+```
+
+#### 2. Variables de entorno
+
+Copia el archivo `.env.example` a `.env` y completa los valores:
+
+```env
+VITE_API_URL="https://studiumserver.onrender.com/api"
+VITE_DEFAULT_PASSWORD="StudiumPassword"
+VITE_MICROSOFT_CLIENT_ID="<Application (client) ID>"
+VITE_MICROSOFT_TENANT_ID="common" # o el Tenant ID de tu organización
+VITE_MICROSOFT_REDIRECT_URI=""    # opcional, por defecto window.location.origin
+```
+
+#### 3. Configuración de autenticación con Microsoft (Microsoft Entra ID)
+
+A partir de esta versión Studium utiliza cuentas Microsoft para el inicio de
+sesión federado. Para habilitarlo es necesario registrar la aplicación en
+**Microsoft Entra ID** (antes Azure Active Directory):
+
+1. Ingresa al [Azure Portal](https://portal.azure.com/) → **Microsoft Entra ID**
+   → **App registrations** → **New registration**.
+2. Completa los datos del registro:
+   - **Name:** `Studium` (o el nombre que prefieras).
+   - **Supported account types:** elige según el alcance deseado (solo la
+     organización, cualquier directorio + cuentas personales, etc.).
+   - **Redirect URI:** plataforma `Single-page application` y la URL del
+     frontend (por ejemplo `http://localhost:5173` durante el desarrollo,
+     o el dominio público en producción).
+3. Una vez creado, copia los siguientes valores en tu archivo `.env`:
+   - `Application (client) ID` → `VITE_MICROSOFT_CLIENT_ID`
+   - `Directory (tenant) ID`   → `VITE_MICROSOFT_TENANT_ID`
+4. En **API permissions** agrega los permisos delegados de Microsoft Graph:
+   - `openid`
+   - `profile`
+   - `email`
+   - `User.Read`
+   (opcional para la foto de perfil: `User.ReadBasic.All`).
+5. (Opcional) En **Authentication** habilita el flujo de **ID tokens** dentro
+   de "Implicit grant and hybrid flows" si tu tenant lo requiere.
+
+> ⚠️ Mientras los valores `VITE_MICROSOFT_CLIENT_ID` y `VITE_MICROSOFT_TENANT_ID`
+> estén vacíos, el botón **Iniciar sesión con Microsoft** quedará visible y
+> mostrará un aviso indicando que la configuración con Azure está pendiente.
+> El inicio de sesión clásico con correo y contraseña sigue funcionando con
+> normalidad, por lo que el sistema permanece operativo aunque la integración
+> con Azure aún no esté completada.
+
+#### 4. Instalación de dependencias y ejecución
+
+```bash
+yarn install      # o npm install
+yarn dev          # arranca el servidor de desarrollo Vite

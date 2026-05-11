@@ -29,7 +29,8 @@ UserProfileCard.defaultProps = {
     id: "0",
     cum: "0",
     nombre: "Nombre completo",
-    img: "https://lh3.googleusercontent.com/a/ACg8ocIKryODAwt86tgz5wqRX2iiJEn4PVHkVGfEjGXSnwnbIw=s96-c"
+    // Imagen genérica de respaldo cuando el usuario no tiene foto de Microsoft.
+    img: "https://www.gravatar.com/avatar/?d=mp&s=200"
 }
 
 export default UserProfileCard;

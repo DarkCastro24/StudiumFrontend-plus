@@ -1,16 +1,21 @@
-﻿import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaMicrosoft } from 'react-icons/fa';
 import LogoUCA from '../assets/img/LogoUCA-blanco.png';
 import { useNavigate } from 'react-router-dom';
-import { GLOBAL } from '../services/apiConfig'
+import { useMsal } from '@azure/msal-react';
+import { GLOBAL } from '../services/apiConfig';
+import { isMicrosoftAuthConfigured, loginRequest } from '../services/msalConfig';
 import { showError, showWarning } from '../utils/alerts';
 
 export const LoginPage = () => {
     //CREDENCIALES
     const API_URL = GLOBAL[0].BASE_URL;
     const DEFAULT_PASSWORD = import.meta.env.VITE_DEFAULT_PASSWORD || 'StudiumPassword';
+    //MSAL (Microsoft Authentication Library)
+    const { instance: msalInstance } = useMsal();
     //PARA NAVEGAR AL HOME
     const navigate = useNavigate();
     const redirectHome = () => {
@@ -190,164 +195,127 @@ export const LoginPage = () => {
         }
     };
 
-    const handleCallbackResponse = async (response) => {
-        if (!response?.credential) {
-            showError({
-                title: 'Inicio de sesión interrumpido',
-                text: 'No se pudo completar el inicio de sesión con Google. Intenta nuevamente.',
+    /**
+     * Intenta descargar la fotografía de perfil del usuario desde Microsoft
+     * Graph. Devuelve una `data URL` lista para usarse como `src` de <img>,
+     * o cadena vacía si la cuenta no tiene foto o no hay permisos.
+     *
+     * NOTA: el scope `User.Read` ya solicita acceso a /me, pero algunos
+     * tenants restringen `/me/photo/$value`. Si se requiere garantizar la
+     * foto puede añadirse el permiso `User.ReadBasic.All` en el portal de
+     * Azure.
+     */
+    const obtenerFotoPerfilMicrosoft = async (accessToken) => {
+        if (!accessToken) return '';
+        try {
+            const response = await fetch('https://graph.microsoft.com/v1.0/me/photo/$value', {
+                headers: { Authorization: `Bearer ${accessToken}` },
             });
-            return;
+            if (!response.ok) return '';
+            const blob = await response.blob();
+            return await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+                reader.onerror = () => resolve('');
+                reader.readAsDataURL(blob);
+            });
+        } catch (error) {
+            console.warn('No se pudo obtener la foto de perfil de Microsoft:', error);
+            return '';
+        }
+    };
+
+    const procesarCuentaMicrosoft = async ({ account, idToken, accessToken }) => {
+        if (!account?.username) {
+            throw new Error('La cuenta de Microsoft no tiene un correo asociado.');
         }
 
-        const userObject = jwtDecode(response.credential);
-        //console.log(userObject); //DATOS DE GOOGLE
+        const email = String(account.username).trim();
 
-        if (!validarDominioCorreo(userObject.email)) {
-            //SE DETIENE SI NO ES UN DOMINIO VALIDO
+        if (!validarDominioCorreo(email)) {
             showWarning({
                 title: 'Correo no permitido',
-                text: 'Inicia sesión con un correo válido (Gmail, Hotmail, Yahoo, iCloud).',
+                text: 'Inicia sesión con un correo válido (Gmail, Hotmail, Outlook, Yahoo, iCloud o UCA).',
             });
             return;
         }
-        //DATOS QUE SE ENVIAN A LA API
-        const emailAsString = String(userObject.email);
-        const nameAsString = String(userObject.name || userObject.email);
-        const ImagenAsString = String(userObject.picture || '');
-        localStorage.setItem("EMAIL", userObject.email);
-        localStorage.setItem("NAME", nameAsString);
-        localStorage.setItem("TOKEN", response.credential);
 
-        if (validarEstudiante(userObject.email)) {
-            //ESTUDIANTE
-            const formEST = {
-                username: emailAsString,
-                nombre: nameAsString,
-                tipo: 2,
-                imagen: ImagenAsString
-            };
-            try {
-                await realizarPeticionPost(formEST);
-            } catch (error) {
-                console.error("Error al enviar los datos del usuario:", error);
-                showError({
-                    title: 'Error de conexión',
-                    text: 'No se pudo conectar con el servidor. Intenta más tarde.',
-                });
-            }
-            redirectHome(); //LO ENVIAMOS A HOME
-        } else {
-            //CATEDRATICO
-            const formCATE = {
-                username: emailAsString,
-                nombre: nameAsString,
-                tipo: 3,
-                imagen: ImagenAsString
-            };
-            try {
-                await realizarPeticionPost(formCATE);
-            } catch (error) {
-                console.error("Error al enviar los datos del usuario:", error);
-                showError({
-                    title: 'Error de conexión',
-                    text: 'No se pudo conectar con el servidor. Intenta más tarde.',
-                });
-            }
-            redirectHome(); //LO ENVIAMOS A HOME
-        }
-    }
+        const name = String(account.name || email);
+        const imagen = await obtenerFotoPerfilMicrosoft(accessToken);
 
-    useEffect(() => {
-        //GOOGLE
-        const clientId = GLOBAL[0].GOOGLE;
-        if (!clientId) {
-            console.error("VITE_GOOGLE_ID no está configurado en .env");
+        localStorage.setItem('EMAIL', email);
+        localStorage.setItem('NAME', name);
+        if (idToken) localStorage.setItem('TOKEN', idToken);
+
+        const formUser = {
+            username: email,
+            nombre: name,
+            tipo: validarEstudiante(email) ? 2 : 3, // 2 → estudiante, 3 → catedrático
+            imagen,
+        };
+
+        try {
+            await realizarPeticionPost(formUser);
+        } catch (error) {
+            console.error('Error al enviar los datos del usuario:', error);
+            showError({
+                title: 'Error de conexión',
+                text: 'No se pudo conectar con el servidor. Intenta más tarde.',
+            });
             return;
         }
 
-        let scriptWasInjected = false;
-        let loadListenerAttached = false;
-        let existingScriptRef = null;
+        redirectHome();
+    };
 
-        const initializeGoogle = () => {
-            try {
-                window.google.accounts.id.initialize({
-                    client_id: clientId,
-                    callback: handleCallbackResponse,
-                });
-                window.google.accounts.id.renderButton(
-                    document.getElementById("googleDIV"),
-                    { theme: "outline", size: "large" },
-                );
-            } catch (error) {
-                console.error("Error al inicializar Google Sign-In:", error);
-                showError({
-                    title: 'Error al cargar Google Sign-In',
-                    text: 'Verifica la configuración e intenta nuevamente.',
-                });
-            }
-        };
-
-        const scriptId = 'google-gsi-script';
-        const existingScript = document.getElementById(scriptId);
-        existingScriptRef = existingScript;
-
-        const loadGoogleScript = () => {
-            const script = document.createElement('script');
-            script.id = scriptId;
-            script.src = 'https://accounts.google.com/gsi/client';
-            script.async = true;
-            script.defer = true;
-            script.onload = initializeGoogle;
-            script.onerror = () => {
-                showError({
-                    title: 'No se pudo cargar Google Sign-In',
-                    text: 'Revisa tu conexión e intenta de nuevo.',
-                });
-            };
-            document.head.appendChild(script);
-            scriptWasInjected = true;
-            existingScriptRef = script;
-        };
-
-        if (window.google && window.google.accounts) {
-            initializeGoogle();
-        } else if (existingScript) {
-            existingScript.addEventListener('load', initializeGoogle, { once: true });
-            loadListenerAttached = true;
-        } else {
-            loadGoogleScript();
+    const iniciarSesionConMicrosoft = async () => {
+        if (!isMicrosoftAuthConfigured) {
+            showWarning({
+                title: 'Microsoft no configurado',
+                text:
+                    'El inicio de sesión con Microsoft está pendiente de configuración. ' +
+                    'Solicita al administrador registrar la aplicación en Microsoft Entra ID ' +
+                    'y completar las variables VITE_MICROSOFT_CLIENT_ID y VITE_MICROSOFT_TENANT_ID.',
+            });
+            return;
         }
 
-        return () => {
-            if (window.google?.accounts?.id) {
-                window.google.accounts.id.cancel();
+        setCargandoMicrosoft(true);
+        try {
+            const result = await msalInstance.loginPopup(loginRequest);
+            const account = result?.account || msalInstance.getAllAccounts()[0];
+            await procesarCuentaMicrosoft({
+                account,
+                idToken: result?.idToken,
+                accessToken: result?.accessToken,
+            });
+        } catch (error) {
+            // El usuario cerró el popup o canceló: no mostramos error agresivo.
+            if (
+                error?.errorCode === 'user_cancelled' ||
+                error?.name === 'BrowserAuthError' && /cancelled/i.test(error?.message || '')
+            ) {
+                return;
             }
+            console.error('Error al iniciar sesión con Microsoft:', error);
+            showError({
+                title: 'No se pudo iniciar sesión con Microsoft',
+                text:
+                    error?.errorMessage ||
+                    error?.message ||
+                    'Intenta nuevamente o usa correo y contraseña.',
+            });
+        } finally {
+            setCargandoMicrosoft(false);
+        }
+    };
 
-            if (loadListenerAttached && existingScriptRef) {
-                existingScriptRef.removeEventListener('load', initializeGoogle);
-            }
-
-            if (scriptWasInjected && existingScriptRef?.parentNode) {
-                existingScriptRef.parentNode.removeChild(existingScriptRef);
-            }
-
-            const oneTapIframe = document.getElementById('gsi-consent-frame');
-            if (oneTapIframe?.parentNode) {
-                oneTapIframe.parentNode.removeChild(oneTapIframe);
-            }
-
-            const oneTapContainer = document.getElementById('credential_picker_container');
-            if (oneTapContainer?.parentNode) {
-                oneTapContainer.parentNode.removeChild(oneTapContainer);
-            }
-        };
-    }, []);
     //MENSAJES DE ERROR
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [mostrarPassword, setMostrarPassword] = useState(false);
     const [cargandoCredenciales, setCargandoCredenciales] = useState(false);
+    const [cargandoMicrosoft, setCargandoMicrosoft] = useState(false);
     //RENDER
     return (
         <div className='login'>
@@ -384,8 +352,21 @@ export const LoginPage = () => {
                         {cargandoCredenciales ? 'Ingresando...' : 'Iniciar sesión'}
                     </button>
                 </form>
-                <p className='login-subtitle'>O continúa con tu cuenta de Google</p>
-                <div id='googleDIV' className='googlebtn'></div>
+                <p className='login-subtitle'>O continúa con tu cuenta de Microsoft</p>
+                <div className='microsoftbtn'>
+                    <button
+                        type='button'
+                        className='btn-login-microsoft'
+                        onClick={iniciarSesionConMicrosoft}
+                        disabled={cargandoMicrosoft}
+                        aria-label='Iniciar sesión con Microsoft'
+                    >
+                        <FaMicrosoft aria-hidden='true' />
+                        <span>
+                            {cargandoMicrosoft ? 'Conectando...' : 'Iniciar sesión con Microsoft'}
+                        </span>
+                    </button>
+                </div>
             </article>
         </div>
     )

@@ -30,7 +30,7 @@ function UserProfilePage() {
     return (
         <div className="perfil">
             <div className="cabecera-busqueda">
-                {userData && (<img className='imagen' src={userData.imagen} alt="Imagen de perfil de Google" />)}
+                {userData && (<img className='imagen' src={userData.imagen} alt="Imagen de perfil de Microsoft" />)}
                 <div className="container-datos-user">
                     {userData && (
                         <div>
