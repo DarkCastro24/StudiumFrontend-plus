@@ -9,12 +9,14 @@ import * as AiIcons from "react-icons/ai";
 import * as GiIcons from "react-icons/gi";
 import { sidebarMenuItems } from "./SidebarMenuItems"
 import { showConfirm } from '../utils/alerts';
+import { useKeycloak } from '../services/KeycloakProvider';
 
 function AppHeader() {
     const [sidebarVisible, setSidebarVisible] = useState(false);
     const sidebarRef = useRef(null);
 
     const navigate = useNavigate();
+    const { keycloak, authenticated } = useKeycloak();
     const handleLogout = async () => {
         const confirmed = await showConfirm({
             title: '¿Cerrar sesión?',
@@ -27,6 +29,23 @@ function AppHeader() {
         if (!confirmed) return;
 
         localStorage.clear();
+
+        // Cuando la sesión se abrió vía Keycloak también debemos invalidarla
+        // en el servidor de identidad: el adaptador hace la redirección al
+        // endpoint de logout y luego nos devuelve al login.
+        if (keycloak && authenticated) {
+            const redirectUri =
+                typeof window !== 'undefined'
+                    ? `${window.location.origin}/login`
+                    : undefined;
+            try {
+                await keycloak.logout({ redirectUri });
+                return;
+            } catch (error) {
+                console.error('[Keycloak] Error cerrando sesión:', error);
+            }
+        }
+
         navigate('/login');
     };
     const redirectLogo = () => {

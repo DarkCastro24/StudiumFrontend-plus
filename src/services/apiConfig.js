@@ -1,21 +1,23 @@
 /**
  * Configuración global consumida por el resto de la aplicación.
  *
- * Anteriormente se exponía el `Client ID` de Google Identity Services
- * (`VITE_GOOGLE_ID`). El proveedor de autenticación migró a Microsoft Entra
- * ID, por lo que ahora se exponen las variables necesarias para MSAL.
+ * El proveedor de autenticación migró de Microsoft Entra ID (MSAL) a Keycloak
+ * (OpenID Connect), por lo que ahora se exponen las variables necesarias
+ * para inicializar el cliente Keycloak desde el frontend.
  *
  * Variables de entorno esperadas (ver `.env.example`):
  *   - VITE_API_URL                   → URL base del backend
- *   - VITE_MICROSOFT_CLIENT_ID       → Application (client) ID de Azure
- *   - VITE_MICROSOFT_TENANT_ID       → Directory (tenant) ID o `common`
- *   - VITE_MICROSOFT_REDIRECT_URI    → URI de redirección registrado en Azure
+ *   - VITE_KEYCLOAK_URL              → URL base del servidor Keycloak
+ *   - VITE_KEYCLOAK_REALM            → Realm donde vive el cliente
+ *   - VITE_KEYCLOAK_CLIENT_ID        → Client ID público (PKCE)
+ *   - VITE_KEYCLOAK_MIN_VALIDITY     → Segundos mínimos antes de renovar token
  */
 export const GLOBAL = [
     {
         BASE_URL: import.meta.env.VITE_API_URL,
-        MICROSOFT_CLIENT_ID: import.meta.env.VITE_MICROSOFT_CLIENT_ID || '',
-        MICROSOFT_TENANT_ID: import.meta.env.VITE_MICROSOFT_TENANT_ID || 'common',
-        MICROSOFT_REDIRECT_URI: import.meta.env.VITE_MICROSOFT_REDIRECT_URI || '',
+        KEYCLOAK_URL: import.meta.env.VITE_KEYCLOAK_URL || '',
+        KEYCLOAK_REALM: import.meta.env.VITE_KEYCLOAK_REALM || '',
+        KEYCLOAK_CLIENT_ID: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || '',
+        KEYCLOAK_MIN_VALIDITY: import.meta.env.VITE_KEYCLOAK_MIN_VALIDITY || '60',
     },
 ];

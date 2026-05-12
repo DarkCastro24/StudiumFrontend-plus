@@ -118,7 +118,7 @@ function TeacherProfilePage() {
     return (
         <div className="perfil-vista">
             <div className="cabecera-vista">
-                {userData && (<img className='imagen' src={userData.imagen} alt="Imagen de perfil de Microsoft" />)}
+                {userData && (<img className='imagen' src={userData.imagen} alt="Imagen de perfil del usuario" />)}
                 <div className="container-datos">
                     {userData && (
                         <div>

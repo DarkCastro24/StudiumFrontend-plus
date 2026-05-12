@@ -1,13 +1,12 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { MsalProvider } from '@azure/msal-react'
 import App from './App.jsx'
-import { msalInstance } from './services/msalConfig'
+import { KeycloakProvider } from './services/KeycloakProvider'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <MsalProvider instance={msalInstance}>
+    <KeycloakProvider>
       <App />
-    </MsalProvider>
+    </KeycloakProvider>
   </React.StrictMode>,
 )

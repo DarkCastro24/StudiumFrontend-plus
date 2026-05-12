@@ -29,7 +29,7 @@ UserProfileCard.defaultProps = {
     id: "0",
     cum: "0",
     nombre: "Nombre completo",
-    // Imagen genérica de respaldo cuando el usuario no tiene foto de Microsoft.
+    // Imagen genérica de respaldo cuando Keycloak no expone una foto de perfil.
     img: "https://www.gravatar.com/avatar/?d=mp&s=200"
 }
 

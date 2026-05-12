@@ -89,10 +89,11 @@ Tecnologías y dependencias documentadas:
 - **jwt-decode**  
   Utilizado para decodificar tokens JWT del lado del cliente y obtener información del usuario autenticado.
 
-- **@azure/msal-browser** y **@azure/msal-react**  
-  Librerías oficiales de Microsoft Authentication Library (MSAL) utilizadas
-  para autenticar usuarios con cuentas Microsoft (Microsoft Entra ID, antes
-  Azure AD). Reemplazaron el inicio de sesión con Google.
+- **keycloak-js**  
+  Adaptador oficial de Keycloak para JavaScript. Implementa el flujo
+  Authorization Code + PKCE de OpenID Connect y gestiona la renovación
+  automática del access token. Reemplazó la integración previa con
+  Microsoft Authentication Library (MSAL).
 
 - **SweetAlert2**  
   Utilizado para mostrar de manera consistente los mensajes de éxito, error,
@@ -168,44 +169,59 @@ Copia el archivo `.env.example` a `.env` y completa los valores:
 ```env
 VITE_API_URL="https://studiumserver.onrender.com/api"
 VITE_DEFAULT_PASSWORD="StudiumPassword"
-VITE_MICROSOFT_CLIENT_ID="<Application (client) ID>"
-VITE_MICROSOFT_TENANT_ID="common" # o el Tenant ID de tu organización
-VITE_MICROSOFT_REDIRECT_URI=""    # opcional, por defecto window.location.origin
+VITE_KEYCLOAK_URL="https://keycloak.midominio.com"
+VITE_KEYCLOAK_REALM="studium"
+VITE_KEYCLOAK_CLIENT_ID="studium-frontend"
+VITE_KEYCLOAK_MIN_VALIDITY="60" # opcional, segundos antes de renovar el token
 ```
 
-#### 3. Configuración de autenticación con Microsoft (Microsoft Entra ID)
+#### 3. Configuración de autenticación con Keycloak (OpenID Connect)
 
-A partir de esta versión Studium utiliza cuentas Microsoft para el inicio de
-sesión federado. Para habilitarlo es necesario registrar la aplicación en
-**Microsoft Entra ID** (antes Azure Active Directory):
+A partir de esta versión Studium delega la autenticación federada a un
+servidor **Keycloak** (>=17). El frontend habla con Keycloak vía el flujo
+estándar **Authorization Code + PKCE**, por lo que basta con registrar un
+cliente público en el realm correspondiente:
 
-1. Ingresa al [Azure Portal](https://portal.azure.com/) → **Microsoft Entra ID**
-   → **App registrations** → **New registration**.
-2. Completa los datos del registro:
-   - **Name:** `Studium` (o el nombre que prefieras).
-   - **Supported account types:** elige según el alcance deseado (solo la
-     organización, cualquier directorio + cuentas personales, etc.).
-   - **Redirect URI:** plataforma `Single-page application` y la URL del
-     frontend (por ejemplo `http://localhost:5173` durante el desarrollo,
-     o el dominio público en producción).
-3. Una vez creado, copia los siguientes valores en tu archivo `.env`:
-   - `Application (client) ID` → `VITE_MICROSOFT_CLIENT_ID`
-   - `Directory (tenant) ID`   → `VITE_MICROSOFT_TENANT_ID`
-4. En **API permissions** agrega los permisos delegados de Microsoft Graph:
-   - `openid`
-   - `profile`
-   - `email`
-   - `User.Read`
-   (opcional para la foto de perfil: `User.ReadBasic.All`).
-5. (Opcional) En **Authentication** habilita el flujo de **ID tokens** dentro
-   de "Implicit grant and hybrid flows" si tu tenant lo requiere.
+1. Ingresa a la consola de administración de Keycloak y selecciona (o crea)
+   el realm que usará la aplicación (por ejemplo `studium`). El nombre del
+   realm se expone como `VITE_KEYCLOAK_REALM`.
+2. En **Clients → Create client** registra un nuevo cliente:
+   - **Client ID:** `studium-frontend` (o el que prefieras). Se expone como
+     `VITE_KEYCLOAK_CLIENT_ID`.
+   - **Client type:** `OpenID Connect`.
+   - **Client authentication:** **OFF** (cliente público con PKCE).
+   - **Authorization:** OFF.
+   - **Authentication flow:** habilita `Standard flow`.
+3. En la pestaña **Settings** del cliente configura:
+   - **Valid redirect URIs:** `http://localhost:5173/*` y
+     `https://<tu-dominio>/*` (uno por cada entorno).
+   - **Valid post logout redirect URIs:** mismas URLs que arriba.
+   - **Web origins:** `+` (o las mismas URLs explícitamente).
+4. En **Advanced → Proof Key for Code Exchange Code Challenge Method**
+   selecciona **S256** (PKCE recomendado).
+5. (Opcional) Crea usuarios directamente en Keycloak o configura un
+   **Identity provider** (Microsoft Entra ID, Google, LDAP, etc.) desde
+   **Identity providers**. Para Studium da igual qué proveedor use Keycloak
+   por debajo: el frontend solo habla con Keycloak.
+6. Copia la URL pública del servidor Keycloak (`VITE_KEYCLOAK_URL`,
+   sin el sufijo `/auth` que solo existía en versiones <=16).
 
-> ⚠️ Mientras los valores `VITE_MICROSOFT_CLIENT_ID` y `VITE_MICROSOFT_TENANT_ID`
-> estén vacíos, el botón **Iniciar sesión con Microsoft** quedará visible y
-> mostrará un aviso indicando que la configuración con Azure está pendiente.
-> El inicio de sesión clásico con correo y contraseña sigue funcionando con
-> normalidad, por lo que el sistema permanece operativo aunque la integración
-> con Azure aún no esté completada.
+> ⚠️ Mientras los valores `VITE_KEYCLOAK_URL`, `VITE_KEYCLOAK_REALM` y
+> `VITE_KEYCLOAK_CLIENT_ID` estén vacíos, el botón **Iniciar sesión con
+> Keycloak** seguirá visible y mostrará un aviso indicando que la
+> configuración está pendiente. El inicio de sesión clásico con correo y
+> contraseña sigue funcionando con normalidad, por lo que el sistema
+> permanece operativo aunque la integración con Keycloak aún no esté
+> completada.
+
+> 📌 **Pendiente — foto de perfil:** Microsoft Graph exponía la foto del
+> usuario en `/me/photo/$value`. Keycloak no tiene un equivalente por
+> defecto. La función `obtenerFotoPerfilKeycloak` ya lee el claim
+> `picture` del id_token; para habilitarla basta con (a) añadir el
+> atributo `picture` al perfil del usuario en Keycloak y (b) crear un
+> *protocol mapper* tipo `User Attribute` en el cliente que copie ese
+> atributo al id_token. Mientras tanto, el componente de perfil usa el
+> placeholder genérico de Gravatar (`?d=mp`).
 
 #### 4. Instalación de dependencias y ejecución
 

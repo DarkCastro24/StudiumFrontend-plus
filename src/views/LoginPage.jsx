@@ -1,21 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { FaMicrosoft } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaKey } from 'react-icons/fa';
 import LogoUCA from '../assets/img/LogoUCA-blanco.png';
 import { useNavigate } from 'react-router-dom';
-import { useMsal } from '@azure/msal-react';
 import { GLOBAL } from '../services/apiConfig';
-import { isMicrosoftAuthConfigured, loginRequest } from '../services/msalConfig';
+import { useKeycloak } from '../services/KeycloakProvider';
 import { showError, showWarning } from '../utils/alerts';
 
 export const LoginPage = () => {
     //CREDENCIALES
     const API_URL = GLOBAL[0].BASE_URL;
     const DEFAULT_PASSWORD = import.meta.env.VITE_DEFAULT_PASSWORD || 'StudiumPassword';
-    //MSAL (Microsoft Authentication Library)
-    const { instance: msalInstance } = useMsal();
+    //KEYCLOAK (OpenID Connect)
+    const { keycloak, initialized, authenticated, configured, login: keycloakLogin } = useKeycloak();
     //PARA NAVEGAR AL HOME
     const navigate = useNavigate();
     const redirectHome = () => {
@@ -196,41 +194,39 @@ export const LoginPage = () => {
     };
 
     /**
-     * Intenta descargar la fotografía de perfil del usuario desde Microsoft
-     * Graph. Devuelve una `data URL` lista para usarse como `src` de <img>,
-     * o cadena vacía si la cuenta no tiene foto o no hay permisos.
+     * TODO (pendiente de integración): obtener la fotografía de perfil del
+     * usuario desde Keycloak.
      *
-     * NOTA: el scope `User.Read` ya solicita acceso a /me, pero algunos
-     * tenants restringen `/me/photo/$value`. Si se requiere garantizar la
-     * foto puede añadirse el permiso `User.ReadBasic.All` en el portal de
-     * Azure.
+     * Microsoft exponía la foto vía Graph (`/me/photo/$value`). Keycloak no
+     * provee un endpoint equivalente por defecto: la foto puede llegar como
+     * un *claim* personalizado (ej.: `picture`) si el administrador agrega
+     * un atributo de usuario y un *protocol mapper* que lo incluya en el
+     * id_token. Mientras eso no esté configurado en el realm, dejamos esta
+     * función como punto de extensión y devolvemos cadena vacía: el
+     * componente `UserProfileCard` ya hace fallback a una imagen genérica
+     * (gravatar `mp`).
+     *
+     * Para habilitarla:
+     *   1. En el realm de Keycloak: Users → Attributes → añade "picture".
+     *   2. Clients → <client> → Client scopes → dedicated → Mappers →
+     *      "User Attribute" mapper que mapee "picture" al id_token.
+     *   3. Sustituye este return por la lectura de `tokenParsed.picture`.
      */
-    const obtenerFotoPerfilMicrosoft = async (accessToken) => {
-        if (!accessToken) return '';
-        try {
-            const response = await fetch('https://graph.microsoft.com/v1.0/me/photo/$value', {
-                headers: { Authorization: `Bearer ${accessToken}` },
-            });
-            if (!response.ok) return '';
-            const blob = await response.blob();
-            return await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(typeof reader.result === 'string' ? reader.result : '');
-                reader.onerror = () => resolve('');
-                reader.readAsDataURL(blob);
-            });
-        } catch (error) {
-            console.warn('No se pudo obtener la foto de perfil de Microsoft:', error);
-            return '';
-        }
+    const obtenerFotoPerfilKeycloak = (tokenParsed) => {
+        if (!tokenParsed) return '';
+        return String(tokenParsed.picture || tokenParsed.imagen || '');
     };
 
-    const procesarCuentaMicrosoft = async ({ account, idToken, accessToken }) => {
-        if (!account?.username) {
-            throw new Error('La cuenta de Microsoft no tiene un correo asociado.');
-        }
+    const procesarCuentaKeycloak = async ({ tokenParsed, idToken }) => {
+        const email = String(
+            tokenParsed?.email ||
+            tokenParsed?.preferred_username ||
+            ''
+        ).trim();
 
-        const email = String(account.username).trim();
+        if (!email) {
+            throw new Error('La cuenta de Keycloak no tiene un correo asociado.');
+        }
 
         if (!validarDominioCorreo(email)) {
             showWarning({
@@ -240,8 +236,12 @@ export const LoginPage = () => {
             return;
         }
 
-        const name = String(account.name || email);
-        const imagen = await obtenerFotoPerfilMicrosoft(accessToken);
+        const name = String(
+            tokenParsed?.name ||
+            (`${tokenParsed?.given_name || ''} ${tokenParsed?.family_name || ''}`).trim() ||
+            email
+        );
+        const imagen = obtenerFotoPerfilKeycloak(tokenParsed);
 
         localStorage.setItem('EMAIL', email);
         localStorage.setItem('NAME', name);
@@ -268,45 +268,43 @@ export const LoginPage = () => {
         redirectHome();
     };
 
-    const iniciarSesionConMicrosoft = async () => {
-        if (!isMicrosoftAuthConfigured) {
+    const iniciarSesionConKeycloak = async () => {
+        if (!configured) {
             showWarning({
-                title: 'Microsoft no configurado',
+                title: 'Keycloak no configurado',
                 text:
-                    'El inicio de sesión con Microsoft está pendiente de configuración. ' +
-                    'Solicita al administrador registrar la aplicación en Microsoft Entra ID ' +
-                    'y completar las variables VITE_MICROSOFT_CLIENT_ID y VITE_MICROSOFT_TENANT_ID.',
+                    'El inicio de sesión con Keycloak está pendiente de configuración. ' +
+                    'Solicita al administrador completar las variables ' +
+                    'VITE_KEYCLOAK_URL, VITE_KEYCLOAK_REALM y VITE_KEYCLOAK_CLIENT_ID.',
             });
             return;
         }
 
-        setCargandoMicrosoft(true);
-        try {
-            const result = await msalInstance.loginPopup(loginRequest);
-            const account = result?.account || msalInstance.getAllAccounts()[0];
-            await procesarCuentaMicrosoft({
-                account,
-                idToken: result?.idToken,
-                accessToken: result?.accessToken,
+        if (!initialized) {
+            showWarning({
+                title: 'Cargando',
+                text: 'Estamos preparando la conexión con Keycloak, intenta nuevamente en unos segundos.',
             });
+            return;
+        }
+
+        setCargandoKeycloak(true);
+        try {
+            const redirectUri =
+                (typeof window !== 'undefined'
+                    ? `${window.location.origin}/login`
+                    : undefined);
+            await keycloakLogin({ redirectUri });
         } catch (error) {
-            // El usuario cerró el popup o canceló: no mostramos error agresivo.
-            if (
-                error?.errorCode === 'user_cancelled' ||
-                error?.name === 'BrowserAuthError' && /cancelled/i.test(error?.message || '')
-            ) {
-                return;
-            }
-            console.error('Error al iniciar sesión con Microsoft:', error);
+            console.error('Error al iniciar sesión con Keycloak:', error);
             showError({
-                title: 'No se pudo iniciar sesión con Microsoft',
+                title: 'No se pudo iniciar sesión con Keycloak',
                 text:
-                    error?.errorMessage ||
                     error?.message ||
                     'Intenta nuevamente o usa correo y contraseña.',
             });
         } finally {
-            setCargandoMicrosoft(false);
+            setCargandoKeycloak(false);
         }
     };
 
@@ -315,7 +313,39 @@ export const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [mostrarPassword, setMostrarPassword] = useState(false);
     const [cargandoCredenciales, setCargandoCredenciales] = useState(false);
-    const [cargandoMicrosoft, setCargandoMicrosoft] = useState(false);
+    const [cargandoKeycloak, setCargandoKeycloak] = useState(false);
+
+    // Tras un redirect-login exitoso, Keycloak deja al usuario en /login con
+    // tokens ya disponibles. Detectamos esa transición y disparamos el mismo
+    // procesamiento de la cuenta (validación de dominio + alta en backend).
+    const processedRedirectRef = useRef(false);
+
+    useEffect(() => {
+        if (!initialized || !authenticated || !keycloak) return;
+        if (processedRedirectRef.current) return;
+        if (localStorage.getItem('ID')) {
+            // Sesión ya estaba persistida; navega al home.
+            processedRedirectRef.current = true;
+            redirectHome();
+            return;
+        }
+
+        processedRedirectRef.current = true;
+        procesarCuentaKeycloak({
+            tokenParsed: keycloak.tokenParsed,
+            idToken: keycloak.idToken || keycloak.token,
+        }).catch((error) => {
+            console.error('Error procesando la sesión de Keycloak:', error);
+            showError({
+                title: 'No se pudo iniciar sesión con Keycloak',
+                text: error?.message || 'Intenta nuevamente o usa correo y contraseña.',
+            });
+        });
+        // procesarCuentaKeycloak y redirectHome dependen de estado/cierres estables;
+        // los efectos de auth solo deben dispararse por cambios de sesión.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialized, authenticated, keycloak]);
+
     //RENDER
     return (
         <div className='login'>
@@ -352,18 +382,18 @@ export const LoginPage = () => {
                         {cargandoCredenciales ? 'Ingresando...' : 'Iniciar sesión'}
                     </button>
                 </form>
-                <p className='login-subtitle'>O continúa con tu cuenta de Microsoft</p>
-                <div className='microsoftbtn'>
+                <p className='login-subtitle'>O continúa con tu cuenta institucional</p>
+                <div className='keycloakbtn'>
                     <button
                         type='button'
-                        className='btn-login-microsoft'
-                        onClick={iniciarSesionConMicrosoft}
-                        disabled={cargandoMicrosoft}
-                        aria-label='Iniciar sesión con Microsoft'
+                        className='btn-login-keycloak'
+                        onClick={iniciarSesionConKeycloak}
+                        disabled={cargandoKeycloak || !initialized}
+                        aria-label='Iniciar sesión con Keycloak'
                     >
-                        <FaMicrosoft aria-hidden='true' />
+                        <FaKey aria-hidden='true' />
                         <span>
-                            {cargandoMicrosoft ? 'Conectando...' : 'Iniciar sesión con Microsoft'}
+                            {cargandoKeycloak ? 'Conectando...' : 'Iniciar sesión con Keycloak'}
                         </span>
                     </button>
                 </div>
