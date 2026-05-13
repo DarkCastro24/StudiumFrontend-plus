@@ -31,17 +31,13 @@ export const KeycloakProvider = ({ children }) => {
         if (!keycloakInstance || initRequested.current) return undefined;
         initRequested.current = true;
 
-        let cancelled = false;
-
         keycloakInstance
             .init(keycloakInitOptions)
             .then((isAuthenticated) => {
-                if (cancelled) return;
                 setAuthenticated(Boolean(isAuthenticated));
                 setInitialized(true);
             })
             .catch((error) => {
-                if (cancelled) return;
                 console.error('[Keycloak] Error inicializando el adaptador:', error);
                 setInitialized(true);
             });
@@ -64,9 +60,7 @@ export const KeycloakProvider = ({ children }) => {
             setAuthenticated(false);
         };
 
-        return () => {
-            cancelled = true;
-        };
+        return undefined;
     }, []);
 
     const value = useMemo(() => ({

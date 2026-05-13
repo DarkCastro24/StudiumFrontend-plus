@@ -175,6 +175,8 @@ VITE_KEYCLOAK_CLIENT_ID="studium-frontend"
 VITE_KEYCLOAK_MIN_VALIDITY="60" # opcional, segundos antes de renovar el token
 ```
 
+### Comando para generar el contenedor de docker de Keycloak: docker run -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:latest start-dev
+
 #### 3. Configuración de autenticación con Keycloak (OpenID Connect)
 
 A partir de esta versión Studium delega la autenticación federada a un
