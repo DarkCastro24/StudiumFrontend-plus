@@ -1576,8 +1576,8 @@
 <h2 id="seguridad">Seguridad<a class="headerlink" href="#seguridad" title="Permanent link">#</a></h2>
 <ul>
 <li><strong>HTTPS obligatorio en producción</strong>: los tokens viajan en el header <code>Authorization</code>, así que <strong>siempre</strong> usa HTTPS en producción.</li>
-<li><strong>No expongas tokens en URLs</strong>: los tokens nunca deben aparecer en query parameters (<code>?token=...</code>), solo en headers.</li>
-<li><strong>localStorage vs cookies</strong>: el frontend usa <code>localStorage</code> (no cookies HttpOnly). Considera las implicaciones de XSS.</li>
+<li><strong>No exponer los tokens en URLs</strong>: los tokens nunca deben aparecer en query parameters (<code>?token=...</code>), solo en headers.</li>
+<li><strong>localStorage</strong>: el frontend usa <code>localStorage</code> y considera las implicaciones de XSS.</li>
 <li><strong>CORS</strong>: asegúrate que el backend está configurado con CORS permitiendo el dominio del frontend.</li>
 </ul>
 <h2 id="endpoints-de-autenticacion">Endpoints de autenticación<a class="headerlink" href="#endpoints-de-autenticacion" title="Permanent link">#</a></h2>
@@ -1611,10 +1611,6 @@
 </tr>
 </tbody>
 </table>
-<div class="admonition warning">
-<p class="admonition-title">TODO</p>
-<p>Completar esta tabla cuando se confirme el contrato exacto de la API del backend. Incluir payloads completos y códigos de error.</p>
-</div>
 <h2 id="ver-tambien">Ver también<a class="headerlink" href="#ver-tambien" title="Permanent link">#</a></h2>
 <ul>
 <li><a href="../../architecture/flujo-autenticacion/">Flujo de autenticación detallado</a></li>

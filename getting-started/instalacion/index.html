@@ -1546,7 +1546,7 @@
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">docker</span> <span class="n">compose</span> <span class="n">logs</span> <span class="o">-f</span> <span class="n">keycloak</span>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">docker</span> <span class="n">compose</span> <span class="n">up</span> <span class="n">-d</span> <span class="p">-</span><span class="n">-build</span> <span class="n">frontend</span>   <span class="c"># rebuild tras cambiar package.json</span>
 </span></code></pre></div>
-<p>El código fuente se monta como volumen, así que cualquier cambio en <code>src/</code> se refleja al instante gracias a Vite HMR (el flag <code>CHOKIDAR_USEPOLLING=true</code> garantiza que el watcher funcione en Windows).</p>
+<p>El código fuente se monta como volumen, así que cualquier cambio en <code>src/</code> se refleja al instante gracias a Vite.</p>
 <h2 id="siguiente-paso">Siguiente paso<a class="headerlink" href="#siguiente-paso" title="Permanent link">#</a></h2>
 <p>Continúa con <a href="../../configuracion/variables-entorno/">Variables de entorno</a> o directo a <a href="../../configuracion/keycloak-realm-cliente/">Configurar Keycloak</a> si ya editaste tu <code>.env.local</code>.</p>
 

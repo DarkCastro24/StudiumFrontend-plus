@@ -676,10 +676,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#discrepancia-de-puertos-a-verificar" class="md-nav__link">
+  <a href="#uso-de-puertos" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Discrepancia de puertos a verificar
+        Uso de puertos
       
     </span>
   </a>
@@ -1370,10 +1370,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#discrepancia-de-puertos-a-verificar" class="md-nav__link">
+  <a href="#uso-de-puertos" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Discrepancia de puertos a verificar
+        Uso de puertos
       
     </span>
   </a>
@@ -1471,17 +1471,11 @@
 </table>
 <p>* Si las tres variables de Keycloak están vacías, el botón <strong>Iniciar sesión con Keycloak</strong> seguirá visible pero mostrará un aviso de configuración pendiente. El login clásico con correo y contraseña sigue funcionando sin ellas.</p>
 <div class="admonition danger">
-<p class="admonition-title">Nunca subas <code>.env.local</code> a git</p>
-<p>Confirma que <code>.env</code> y <code>.env.local</code> estén en tu <code>.gitignore</code>. Nunca commitees credenciales reales, incluyendo el <code>VITE_DEFAULT_PASSWORD</code>.</p>
+<p class="admonition-title">Jamas se debe subir <code>.env.local</code> a git</p>
+<p>Confirmar siempre que <code>.env</code> y <code>.env.local</code> estén en tu <code>.gitignore</code>. Nunca commitees credenciales reales, incluyendo el <code>VITE_DEFAULT_PASSWORD</code>.</p>
 </div>
-<h2 id="discrepancia-de-puertos-a-verificar">Discrepancia de puertos a verificar<a class="headerlink" href="#discrepancia-de-puertos-a-verificar" title="Permanent link">#</a></h2>
-<p>El README del proyecto usa <strong>puerto 5173</strong> (default de Vite) y client ID <strong><code>studium</code></strong>, mientras que la guía de configuración interna del equipo usa <strong>puerto 5174</strong> y client ID <strong><code>studium-frontend</code></strong>. Antes de continuar, confirma cuál es el valor vigente en tu entorno y usa el mismo en:</p>
-<ul>
-<li><code>vite.config.js</code> (puerto del dev server)</li>
-<li>El client de Keycloak (<code>Valid redirect URIs</code>, <code>Web origins</code>)</li>
-<li><code>VITE_KEYCLOAK_CLIENT_ID</code></li>
-</ul>
-<p>Este documento asume los valores de la guía interna (<strong>5174</strong> / <strong><code>studium-frontend</code></strong>). Ajusta si tu equipo decidió mantener los del README.</p>
+<h2 id="uso-de-puertos">Uso de puertos<a class="headerlink" href="#uso-de-puertos" title="Permanent link">#</a></h2>
+<p>React por defecto corre en el <strong>puerto 5173</strong> pero el client ID <strong><code>studium</code></strong> usa <strong>puerto 5174</strong> y client ID <strong><code>studium-frontend</code></strong>. </p>
 <h2 id="configuracion-del-backend">Configuración del backend<a class="headerlink" href="#configuracion-del-backend" title="Permanent link">#</a></h2>
 <ul>
 <li>En desarrollo puedes apuntar a la instancia desplegada (<code>https://studiumserver.onrender.com/api</code>). Por ser plan free de Render, el primer request tras inactividad puede tardar <strong>30-90 segundos</strong> ("cold start").</li>
