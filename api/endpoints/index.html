@@ -1438,7 +1438,7 @@
 <tr>
 <td><code>/auth/register</code></td>
 <td><code>POST</code></td>
-<td>Alta/upsert del usuario tras autenticarse (clásico o Keycloak)</td>
+<td>Update/Insert del usuario tras autenticarse</td>
 </tr>
 <tr>
 <td><code>/user/profile/:id</code></td>
@@ -1502,10 +1502,6 @@
 </tr>
 </tbody>
 </table>
-<div class="admonition warning">
-<p class="admonition-title">TODO</p>
-<p>Completar esta tabla con todos los endpoints, métodos exactos y payloads cuando se documente formalmente la API REST del backend. Considerar generar esta página automáticamente desde una especificación OpenAPI si el backend llega a publicar una.</p>
-</div>
 <h2 id="autenticacion-en-las-peticiones">Autenticación en las peticiones<a class="headerlink" href="#autenticacion-en-las-peticiones" title="Permanent link">#</a></h2>
 <p>Todas las peticiones a rutas protegidas requieren el token guardado en <code>localStorage</code> durante el login. La configuración de Axios vive en <code>src/services/apiConfig.js</code>.</p>
 <h2 id="ver-tambien">Ver también<a class="headerlink" href="#ver-tambien" title="Permanent link">#</a></h2>

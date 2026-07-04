@@ -23,7 +23,7 @@
     
     
       
-        <title>Autenticacion - Studium 360 — Frontend</title>
+        <title>Autenticación en la API - Studium 360 — Frontend</title>
       
     
     
@@ -73,6 +73,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#autenticacion-en-la-api" class="md-skip">
+          Saltar a contenido
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -103,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Autenticacion
+              Autenticación en la API
             
           </span>
         </div>
@@ -1264,6 +1269,183 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#flujo-de-obtencion-del-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flujo de obtención del token
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Flujo de obtención del token">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-login-clasico-correo-contrasena" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Login clásico (correo + contraseña)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-login-federado-keycloak-openid-connect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Login federado (Keycloak + OpenID Connect)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#incluir-el-token-en-peticiones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Incluir el token en peticiones
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Incluir el token en peticiones">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ejemplo-de-peticion-desde-el-codigo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ejemplo de petición desde el código:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validacion-de-tokens-en-el-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validación de tokens en el backend
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Validación de tokens en el backend">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#codigos-de-respuesta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Códigos de respuesta
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#renovacion-automatica-del-token-keycloak" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Renovación automática del token (Keycloak)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#manejo-de-tokens-expirados" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manejo de tokens expirados
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Manejo de tokens expirados">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ejemplo-de-interceptor-para-manejar-401" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ejemplo de interceptor para manejar 401:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#seguridad" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Seguridad
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#endpoints-de-autenticacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Endpoints de autenticación
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ver-tambien" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ver también
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1280,9 +1462,165 @@
 
 
 
-  <h1>Autenticacion</h1>
-
-
+<h1 id="autenticacion-en-la-api">Autenticación en la API<a class="headerlink" href="#autenticacion-en-la-api" title="Permanent link">#</a></h1>
+<p>El frontend incluye el token JWT en todas las peticiones a la API del backend. Este documento explica cómo funciona la autenticación desde el lado del cliente.</p>
+<h2 id="flujo-de-obtencion-del-token">Flujo de obtención del token<a class="headerlink" href="#flujo-de-obtencion-del-token" title="Permanent link">#</a></h2>
+<p>Hay dos caminos:</p>
+<h3 id="1-login-clasico-correo-contrasena">1. Login clásico (correo + contraseña)<a class="headerlink" href="#1-login-clasico-correo-contrasena" title="Permanent link">#</a></h3>
+<ol>
+<li>Usuario ingresa correo y contraseña en <code>/login</code>.</li>
+<li><code>LoginPage</code> hace POST a <code>/auth/login</code>.</li>
+<li>Backend retorna un JWT.</li>
+<li>Frontend decodifica el JWT con <code>jwt-decode</code> y valida el dominio.</li>
+<li>Frontend llama a <code>/auth/register</code> para dar de alta/actualizar el usuario.</li>
+<li>Backend retorna un <code>ID</code> de Mongo.</li>
+<li>El <code>ID</code> y el <code>TOKEN</code> se guardan en <code>localStorage</code>.</li>
+</ol>
+<h3 id="2-login-federado-keycloak-openid-connect">2. Login federado (Keycloak + OpenID Connect)<a class="headerlink" href="#2-login-federado-keycloak-openid-connect" title="Permanent link">#</a></h3>
+<ol>
+<li>Usuario pulsa "Iniciar sesión con Keycloak".</li>
+<li><code>keycloak-js</code> redirige a Keycloak.</li>
+<li>Usuario autentica en Keycloak (usuario/contraseña del realm o Identity Provider federado como Microsoft).</li>
+<li>Keycloak redirige de vuelta con tokens en el fragmento de URL.</li>
+<li><code>keycloak-js</code> captura los tokens.</li>
+<li>Frontend valida el dominio del correo y llama a <code>/auth/register</code>.</li>
+<li>Backend retorna el <code>ID</code> de Mongo.</li>
+<li>El <code>ID</code> y el token de Keycloak se guardan en <code>localStorage</code>.</li>
+</ol>
+<h2 id="incluir-el-token-en-peticiones">Incluir el token en peticiones<a class="headerlink" href="#incluir-el-token-en-peticiones" title="Permanent link">#</a></h2>
+<p>El frontend usa <strong>Axios</strong> configurado en <code>src/services/apiConfig.js</code>. El interceptor agrega automáticamente el header <code>Authorization</code>:</p>
+<div class="language-javascript highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// Código interno (ya configurado)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nx">axios</span><span class="p">.</span><span class="nx">defaults</span><span class="p">.</span><span class="nx">headers</span><span class="p">.</span><span class="nx">common</span><span class="p">[</span><span class="s1">&#39;Authorization&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`Bearer </span><span class="si">${</span><span class="nx">token</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
+</span></code></pre></div>
+<h3 id="ejemplo-de-peticion-desde-el-codigo">Ejemplo de petición desde el código:<a class="headerlink" href="#ejemplo-de-peticion-desde-el-codigo" title="Permanent link">#</a></h3>
+<div class="language-javascript highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">import</span><span class="w"> </span><span class="nx">axios</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;axios&#39;</span><span class="p">;</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1">// El interceptor ya incluyó el Authorization header</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">axios</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/cursos&#39;</span><span class="p">);</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1">// Equivalente a:</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1">// GET /cursos</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="c1">// Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</span>
+</span></code></pre></div>
+<h2 id="validacion-de-tokens-en-el-backend">Validación de tokens en el backend<a class="headerlink" href="#validacion-de-tokens-en-el-backend" title="Permanent link">#</a></h2>
+<p>El backend (StudiumServer-plus) valida:</p>
+<ol>
+<li><strong>Firma del token</strong>: confirma que no fue alterado.</li>
+<li><strong>Expiración</strong>: rechaza si <code>exp</code> es anterior a ahora.</li>
+<li><strong>Dominio</strong>: rechaza si el correo no está en la lista permitida.</li>
+</ol>
+<h3 id="codigos-de-respuesta">Códigos de respuesta<a class="headerlink" href="#codigos-de-respuesta" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Código</th>
+<th>Significado</th>
+<th>Acción del frontend</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>200</code></td>
+<td>Autenticación válida, request procesado</td>
+<td>Continuar normalmente</td>
+</tr>
+<tr>
+<td><code>401 Unauthorized</code></td>
+<td>Token ausente, expirado o inválido</td>
+<td>Redirigir a <code>/login</code></td>
+</tr>
+<tr>
+<td><code>403 Forbidden</code></td>
+<td>Usuario autenticado pero sin permisos</td>
+<td>Mostrar alerta y denegar acceso</td>
+</tr>
+<tr>
+<td><code>400 Bad Request</code></td>
+<td>Validación fallida (dominio no permitido, etc.)</td>
+<td>Mostrar alerta de error</td>
+</tr>
+</tbody>
+</table>
+<h2 id="renovacion-automatica-del-token-keycloak">Renovación automática del token (Keycloak)<a class="headerlink" href="#renovacion-automatica-del-token-keycloak" title="Permanent link">#</a></h2>
+<p>Si usas Keycloak, <code>keycloak-js</code> renueva automáticamente el access token antes de expirar. Esto es controlado por:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>VITE_KEYCLOAK_MIN_VALIDITY = 60
+</span></code></pre></div>
+<p>Significa: cuando falten 60 segundos o menos para que expire el token, <code>keycloak-js</code> hace un refresh automático en background.</p>
+<h2 id="manejo-de-tokens-expirados">Manejo de tokens expirados<a class="headerlink" href="#manejo-de-tokens-expirados" title="Permanent link">#</a></h2>
+<p>Si un token expira durante una petición:</p>
+<ol>
+<li>El backend retorna <code>401 Unauthorized</code>.</li>
+<li>El frontend debería detectar este error.</li>
+<li>Si es Keycloak, <code>keycloak-js</code> intenta renovar.</li>
+<li>Si sigue siendo <code>401</code>, redirige a <code>/login</code>.</li>
+</ol>
+<h3 id="ejemplo-de-interceptor-para-manejar-401">Ejemplo de interceptor para manejar 401:<a class="headerlink" href="#ejemplo-de-interceptor-para-manejar-401" title="Permanent link">#</a></h3>
+<div class="language-javascript highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// En src/services/apiConfig.js</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nx">axios</span><span class="p">.</span><span class="nx">interceptors</span><span class="p">.</span><span class="nx">response</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="p">(</span><span class="nx">response</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">response</span><span class="p">,</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">response</span><span class="o">?</span><span class="p">.</span><span class="nx">status</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">401</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">      </span><span class="c1">// Token expirado o inválido</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">      </span><span class="nx">localStorage</span><span class="p">.</span><span class="nx">removeItem</span><span class="p">(</span><span class="s1">&#39;TOKEN&#39;</span><span class="p">);</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">      </span><span class="nx">localStorage</span><span class="p">.</span><span class="nx">removeItem</span><span class="p">(</span><span class="s1">&#39;ID&#39;</span><span class="p">);</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">      </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">href</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;/login&#39;</span><span class="p">;</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="p">);</span>
+</span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Verificar implementación</p>
+<p>Confirma en <code>src/services/apiConfig.js</code> que existe un interceptor que maneja errores 401 correctamente. Si no existe, es un candidato para agregar.</p>
+</div>
+<h2 id="seguridad">Seguridad<a class="headerlink" href="#seguridad" title="Permanent link">#</a></h2>
+<ul>
+<li><strong>HTTPS obligatorio en producción</strong>: los tokens viajan en el header <code>Authorization</code>, así que <strong>siempre</strong> usa HTTPS en producción.</li>
+<li><strong>No expongas tokens en URLs</strong>: los tokens nunca deben aparecer en query parameters (<code>?token=...</code>), solo en headers.</li>
+<li><strong>localStorage vs cookies</strong>: el frontend usa <code>localStorage</code> (no cookies HttpOnly). Considera las implicaciones de XSS.</li>
+<li><strong>CORS</strong>: asegúrate que el backend está configurado con CORS permitiendo el dominio del frontend.</li>
+</ul>
+<h2 id="endpoints-de-autenticacion">Endpoints de autenticación<a class="headerlink" href="#endpoints-de-autenticacion" title="Permanent link">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Método</th>
+<th>Parámetros</th>
+<th>Retorna</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/auth/login</code></td>
+<td><code>POST</code></td>
+<td><code>{ username, password }</code></td>
+<td><code>{ token, ... }</code></td>
+</tr>
+<tr>
+<td><code>/auth/register</code></td>
+<td><code>POST</code></td>
+<td><code>{ email, ... }</code></td>
+<td><code>{ id, ... }</code></td>
+</tr>
+<tr>
+<td><code>/auth/logout</code></td>
+<td><code>POST</code></td>
+<td>ninguno</td>
+<td><code>{ success: true }</code></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">TODO</p>
+<p>Completar esta tabla cuando se confirme el contrato exacto de la API del backend. Incluir payloads completos y códigos de error.</p>
+</div>
+<h2 id="ver-tambien">Ver también<a class="headerlink" href="#ver-tambien" title="Permanent link">#</a></h2>
+<ul>
+<li><a href="../../architecture/flujo-autenticacion/">Flujo de autenticación detallado</a></li>
+<li><a href="../endpoints/">Endpoints consumidos</a></li>
+<li><a href="../introduccion/">Introducción a la API</a></li>
+</ul>
 
 
 

@@ -1503,7 +1503,7 @@
 <h1 id="studium-360-frontend">🎓 Studium 360 — Frontend<a class="headerlink" href="#studium-360-frontend" title="Permanent link">#</a></h1>
 <p>Aplicación web frontend del sistema <strong>Studium</strong>, una plataforma para los círculos de estudio de la <strong>Universidad Centroamericana José Simeón Cañas (UCA)</strong>. Permite a estudiantes, catedráticos y administradores gestionar cursos, recursos académicos, perfiles y comunicaciones desde una interfaz única.</p>
 <h2 id="que-es-studium">¿Qué es Studium?<a class="headerlink" href="#que-es-studium" title="Permanent link">#</a></h2>
-<p>Studium es una <strong>Single Page Application (SPA)</strong> que consume los servicios REST de un backend externo y delega la autenticación a un servidor <strong>Keycloak</strong>, con soporte de federación mediante <strong>Microsoft Entra ID</strong>.</p>
+<p>Studium es una <strong>sistema web desarrollado en React</strong> que consume los servicios REST de un backend externo y delega la autenticación a un servidor <strong>Keycloak</strong>, con soporte de federación mediante <strong>Microsoft Auth</strong>.</p>
 <table>
 <thead>
 <tr>
@@ -1526,7 +1526,7 @@
 </tr>
 <tr>
 <td>Estilos</td>
-<td>Sass, Tailwind CSS 3, Reactstrap</td>
+<td>Sass</td>
 </tr>
 <tr>
 <td>HTTP</td>
@@ -1534,7 +1534,7 @@
 </tr>
 <tr>
 <td>Autenticación</td>
-<td>keycloak-js 25 (Authorization Code + PKCE)</td>
+<td>keycloak-js 25</td>
 </tr>
 <tr>
 <td>Contenerización</td>
@@ -1590,12 +1590,11 @@
 </ul>
 <h2 id="estado-del-proyecto">Estado del proyecto<a class="headerlink" href="#estado-del-proyecto" title="Permanent link">#</a></h2>
 <ul>
-<li>✅ Autenticación con Keycloak (Authorization Code + PKCE)</li>
-<li>✅ Federación con Microsoft Entra ID</li>
-<li>✅ Docker Compose para desarrollo reproducible</li>
-<li>⚠️ Backend en Render free tier — cold starts de 30–90 s</li>
-<li>⚠️ Falta configurar mapper de foto de perfil en el realm</li>
-<li>🔲 Tests automatizados aún no integrados</li>
+<li>Autenticación con Keycloak (Authorization Code + PKCE)</li>
+<li>Integración con Microsoft Entra ID</li>
+<li>Docker Compose para desarrollo reproducible</li>
+<li>Falta configurar mapper de foto de perfil en el realm</li>
+<li>Tests automatizados aún no integrados</li>
 </ul>
 <h2 id="licencia">Licencia<a class="headerlink" href="#licencia" title="Permanent link">#</a></h2>
 <p>Ver <a href="licencia/">Licencia</a>.</p>
